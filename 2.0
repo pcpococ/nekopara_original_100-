@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор ПК — Монохром</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Иконки и Шрифты -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #888888;
+        }
+        .block-border {
+            border: 1px solid #222222;
+            background-color: #0d0d0d;
+        }
+        select {
+            background-color: #000000;
+            color: #ffffff;
+            border: 1px solid #333333;
+        }
+        select:focus {
+            border-color: #ffffff;
+            outline: none;
+        }
+        .highlight-white {
+            color: #ffffff !important;
+        }
+        .badge-ok {
+            background-color: #ffffff;
+            color: #000000;
+            font-weight: 800;
+        }
+        .badge-err {
+            background-color: #ffffff;
+            color: #000000;
+            border: 2px solid #ffffff;
+            font-weight: 900;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #222222; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8 space-y-8">
+
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ / ИТОГО -->
+    <header class="block-border p-6 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div>
+                <h1 class="text-xl font-bold highlight-white tracking-tight uppercase">Сборщик ПК</h1>
+                <p class="text-xs text-zinc-500">Проверка совместимости и расчет FPS</p>
+            </div>
+            <!-- Изображение Чоколы из Nekopara -->
+            <img src="https://nekopara.com/wp-content/uploads/2019/11/chocola_thumb.png" alt="Chocola Nekopara" class="w-10 h-10 object-contain grayscale filter rounded-md border border-zinc-800 p-0.5">
+        </div>
+
+        <div class="flex items-center gap-6">
+            <div class="text-right">
+                <span class="text-[10px] uppercase tracking-widest block text-zinc-500">Итоговая стоимость</span>
+                <span id="totalPriceHeader" class="text-3xl font-black highlight-white font-mono">0 ₽</span>
+            </div>
+            <button id="resetBuildBtn" class="px-4 py-2 text-xs font-semibold border border-zinc-700 text-zinc-300 hover:border-white hover:text-white transition">
+                Сброс
+            </button>
+        </div>
+    </header>
+
+    <!-- СТАТУС СОВМЕСТИМОСТИ -->
+    <section class="block-border p-6 rounded-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <span class="text-xs uppercase tracking-widest font-bold highlight-white">Совместимость</span>
+            <span id="compatSummaryBadge" class="px-3 py-1 text-xs uppercase font-extrabold border border-zinc-700 text-zinc-400">
+                Ожидание выбора
+            </span>
+        </div>
+
+        <div id="compatibilityList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <!-- Динамические проверки -->
+        </div>
+    </section>
+
+    <!-- ВЫБОР КОМПОНЕНТОВ -->
+    <section class="space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <h2 class="text-sm uppercase tracking-widest font-bold highlight-white">Комплектующие</h2>
+            <span id="powerUsageText" class="text-xs font-mono highlight-white">0 / 0 Вт</span>
+        </div>
+
+        <div id="hardwareGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Селекторы генерируются JS -->
+        </div>
+    </section>
+
+    <!-- ПРОИЗВОДИТЕЛЬНОСТЬ -->
+    <section class="space-y-4">
+        <div class="border-b border-zinc-800 pb-2">
+            <h2 class="text-sm uppercase tracking-widest font-bold highlight-white">Производительность</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="block-border p-5 rounded-xl space-y-1">
+                <span class="text-[10px] uppercase tracking-widest text-zinc-500 block">Класс ПК</span>
+                <div id="buildTierTitle" class="text-base font-bold highlight-white">Не сформирована</div>
+                <div id="buildTierDesc" class="text-xs text-zinc-500">Выберите CPU и GPU</div>
+            </div>
+
+            <div class="block-border p-5 rounded-xl flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] uppercase tracking-widest text-zinc-500 block">Игры</span>
+                    <div id="gamingScore" class="text-2xl font-black highlight-white font-mono">0 / 100</div>
+                </div>
+                <i class="fas fa-gamepad text-zinc-700 text-xl"></i>
+            </div>
+
+            <div class="block-border p-5 rounded-xl flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] uppercase tracking-widest text-zinc-500 block">Работа</span>
+                    <div id="workScore" class="text-2xl font-black highlight-white font-mono">0 / 100</div>
+                </div>
+                <i class="fas fa-briefcase text-zinc-700 text-xl"></i>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- График FPS -->
+            <div class="block-border p-5 rounded-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase highlight-white">FPS в играх</span>
+                    <div class="flex gap-2 text-xs font-mono">
+                        <button class="res-btn highlight-white border-b border-white font-bold" data-res="1080p">1080p</button>
+                        <button class="res-btn text-zinc-600 hover:text-zinc-300" data-res="1440p">1440p</button>
+                        <button class="res-btn text-zinc-600 hover:text-zinc-300" data-res="4K">4K</button>
+                    </div>
+                </div>
+                <div class="h-48">
+                    <canvas id="gamingChart"></canvas>
+                </div>
+            </div>
+
+            <!-- График задач -->
+            <div class="block-border p-5 rounded-xl space-y-4">
+                <span class="text-xs font-bold uppercase highlight-white">Рабочие задачи</span>
+                <div class="h-48">
+                    <canvas id="workplaceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ЧЕК-ЛИСТ -->
+    <section class="block-border p-6 rounded-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <span class="text-xs uppercase tracking-widest font-bold highlight-white">Чек-лист сборки</span>
+            <span id="guideProgressText" class="text-xs font-mono highlight-white">0%</span>
+        </div>
+        <div id="guideStepsContainer" class="space-y-2"></div>
+    </section>
+
+    <!-- МОДАЛЬНОЕ ОКНО ИНФОРМАЦИИ -->
+    <div id="infoModal" class="fixed inset-0 z-50 hidden bg-black/90 flex items-center justify-center p-4">
+        <div class="block-border max-w-md w-full p-6 rounded-xl space-y-4">
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+                <h3 id="modalTitle" class="text-sm font-bold uppercase highlight-white"></h3>
+                <button id="closeModalBtn" class="text-zinc-500 hover:text-white">✕</button>
+            </div>
+            <p id="modalDescription" class="text-xs text-zinc-400 leading-relaxed"></p>
+            <div class="p-3 border border-zinc-800 bg-zinc-950 text-xs text-zinc-300">
+                <span class="font-bold highlight-white block mb-1">Совет:</span>
+                <p id="modalTip"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const HARDWARE_DATA = {
+            cpu: {
+                title: "Процессор",
+                info: "Главный вычислительный блок ПК.",
+                tip: "Сокет процессора должен полностью совпадать с сокетом материнской платы.",
+                items: [
+                    { id: 'cpu1', name: 'Intel Core i3-12100F', price: 8500, socket: 'LGA1700', ramType: 'DDR4', power: 65, scoreGaming: 45, scoreWork: 35 },
+                    { id: 'cpu2', name: 'AMD Ryzen 5 5600', price: 11500, socket: 'AM4', ramType: 'DDR4', power: 65, scoreGaming: 60, scoreWork: 50 },
+                    { id: 'cpu3', name: 'Intel Core i5-13400F', price: 18500, socket: 'LGA1700', ramType: 'DDR5', power: 95, scoreGaming: 75, scoreWork: 70 },
+                    { id: 'cpu4', name: 'AMD Ryzen 7 7800X3D', price: 42000, socket: 'AM5', ramType: 'DDR5', power: 120, scoreGaming: 99, scoreWork: 85 }
+                ]
+            },
+            motherboard: {
+                title: "Материнская плата",
+                info: "Плата, соединяющая все комплектующие.",
+                tip: "Проверяйте поддерживаемый сокет и тип памяти (DDR4 / DDR5).",
+                items: [
+                    { id: 'mb1', name: 'GIGABYTE B660M (LGA1700, DDR4)', price: 9500, socket: 'LGA1700', ramType: 'DDR4', formFactor: 'Micro-ATX', power: 15 },
+                    { id: 'mb2', name: 'MSI B550-A PRO (AM4, DDR4)', price: 11000, socket: 'AM4', ramType: 'DDR4', formFactor: 'ATX', power: 15 },
+                    { id: 'mb3', name: 'MSI MAG B650 (AM5, DDR5)', price: 21500, socket: 'AM5', ramType: 'DDR5', formFactor: 'ATX', power: 20 }
+                ]
+            },
+            gpu: {
+                title: "Видеокарта",
+                info: "Отвечает за рендеринг графики и FPS.",
+                tip: "Смотрите на длину видеокарты в миллиметрах.",
+                items: [
+                    { id: 'gpu1', name: 'GTX 1650 4GB', price: 14000, power: 75, lengthMm: 170, scoreGaming: 30, scoreWork: 25 },
+                    { id: 'gpu2', name: 'RTX 3060 12GB', price: 29000, power: 170, lengthMm: 242, scoreGaming: 65, scoreWork: 60 },
+                    { id: 'gpu3', name: 'RTX 4070 Super 12GB', price: 68000, power: 220, lengthMm: 242, scoreGaming: 88, scoreWork: 85 }
+                ]
+            },
+            ram: {
+                title: "Оперативная память",
+                info: "Временная память для работы программ.",
+                tip: "DDR4 и DDR5 физически несовместимы между собой.",
+                items: [
+                    { id: 'ram1', name: '16GB (2x8GB) DDR4', price: 4200, ramType: 'DDR4', power: 10 },
+                    { id: 'ram2', name: '32GB (2x16GB) DDR4', price: 7500, ramType: 'DDR4', power: 12 },
+                    { id: 'ram3', name: '32GB (2x16GB) DDR5', price: 12500, ramType: 'DDR5', power: 15 }
+                ]
+            },
+            storage: {
+                title: "Накопитель (SSD)",
+                info: "Память для операционной системы и файлов.",
+                tip: "M.2 NVMe накопители подключаются без проводов напрямую к плате.",
+                items: [
+                    { id: 'st1', name: '512GB M.2 NVMe SSD', price: 4000, power: 5 },
+                    { id: 'st2', name: '1TB M.2 NVMe SSD', price: 7200, power: 6 }
+                ]
+            },
+            psu: {
+                title: "Блок питания",
+                info: "Питает всю систему электричеством.",
+                tip: "Выбирайте мощность с запасом от суммарного потребления.",
+                items: [
+                    { id: 'psu1', name: '500W Deepcool', price: 3800, capacity: 500 },
+                    { id: 'psu2', name: '650W Montech', price: 5800, capacity: 650 },
+                    { id: 'psu3', name: '750W Be Quiet!', price: 10500, capacity: 750 }
+                ]
+            },
+            cooler: {
+                title: "Кулер процессора",
+                info: "Охлаждает процессор.",
+                tip: "Проверьте высоту кулера — он должен помещаться в корпус.",
+                items: [
+                    { id: 'cool1', name: 'Башня (130W, 148mm)', price: 1500, heightMm: 148, power: 5 },
+                    { id: 'cool2', name: 'Башня (180W, 157mm)', price: 2800, heightMm: 157, power: 5 }
+                ]
+            },
+            case: {
+                title: "Корпус",
+                info: "Каркас для размещения всех деталей.",
+                tip: "Учитывайте допустимую длину видеокарты.",
+                items: [
+                    { id: 'cs1', name: 'Micro-ATX Case (Max GPU 250mm)', price: 3000, maxGpuLen: 250, maxCoolerHt: 150, supportedForm: ['Micro-ATX'], power: 3 },
+                    { id: 'cs2', name: 'ATX Mid-Tower (Max GPU 320mm)', price: 5500, maxGpuLen: 320, maxCoolerHt: 160, supportedForm: ['ATX', 'Micro-ATX'], power: 8 }
+                ]
+            }
+        };
+
+        const ASSEMBLY_STEPS = [
+            "1. Установка процессора в сокет материнской платы",
+            "2. Установка оперативной памяти (слоты 2 и 4)",
+            "3. Установка M.2 SSD накопителя",
+            "4. Закрепление кулера процессора",
+            "5. Монтаж блока питания в корпус",
+            "6. Установка материнской платы в корпус",
+            "7. Установка видеокарты и подключение кабелей питания"
+        ];
+
+        let selectedBuild = { cpu: null, motherboard: null, gpu: null, ram: null, storage: null, psu: null, cooler: null, case: null };
+        let currentRes = '1080p';
+        let guideCompleted = new Array(ASSEMBLY_STEPS.length).fill(false);
+        let gamingChartInstance = null;
+        let workplaceChartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHardwareCards();
+            initCharts();
+            renderGuideSteps();
+            setupEventListeners();
+            checkCompatibility();
+        });
+
+        function renderHardwareCards() {
+            const grid = document.getElementById('hardwareGrid');
+            grid.innerHTML = '';
+
+            Object.keys(HARDWARE_DATA).forEach(key => {
+                const cat = HARDWARE_DATA[key];
+                const card = document.createElement('div');
+                card.id = `card-${key}`;
+                card.className = "block-border p-4 rounded-xl space-y-3 flex flex-col justify-between";
+
+                let optionsHtml = `<option value="">-- Не выбрано --</option>`;
+                cat.items.forEach(item => {
+                    optionsHtml += `<option value="${item.id}">${item.name} — ${item.price.toLocaleString()} ₽</option>`;
+                });
+
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold highlight-white uppercase">${cat.title}</span>
+                            <button onclick="openInfoModal('${key}')" class="text-[10px] text-zinc-500 hover:text-white uppercase">[Инфо]</button>
+                        </div>
+                        <select id="select-${key}" onchange="handleSelectChange('${key}', this.value)" class="w-full rounded p-2 text-xs">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-zinc-800 text-xs">
+                        <span id="badge-${key}" class="text-[10px] font-bold px-2 py-0.5 border border-zinc-800 text-zinc-600">—</span>
+                        <span id="price-${key}" class="font-mono highlight-white">0 ₽</span>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function handleSelectChange(categoryKey, selectedId) {
+            const item = HARDWARE_DATA[categoryKey].items.find(i => i.id === selectedId) || null;
+            selectedBuild[categoryKey] = item;
+
+            const priceEl = document.getElementById(`price-${categoryKey}`);
+            if (priceEl) priceEl.innerText = item ? `${item.price.toLocaleString()} ₽` : '0 ₽';
+
+            checkCompatibility();
+            updatePerformanceScores();
+        }
+
+        function checkCompatibility() {
+            let totalPrice = 0;
+            let powerReq = 0;
+            let psuCapacity = 0;
+
+            Object.keys(selectedBuild).forEach(key => {
+                const item = selectedBuild[key];
+                if (item) {
+                    totalPrice += item.price || 0;
+                    powerReq += item.power || 0;
+                    if (key === 'psu') psuCapacity = item.capacity || 0;
+                }
+            });
+
+            document.getElementById('totalPriceHeader').innerText = `${totalPrice.toLocaleString()} ₽`;
+            document.getElementById('powerUsageText').innerText = `${powerReq} Вт / ${psuCapacity ? psuCapacity + ' Вт' : '—'}`;
+
+            const cpu = selectedBuild.cpu;
+            const mb = selectedBuild.motherboard;
+            const ram = selectedBuild.ram;
+            const gpu = selectedBuild.gpu;
+            const cooler = selectedBuild.cooler;
+            const pcCase = selectedBuild.case;
+
+            const checks = [
+                { name: "Сокет CPU / Плата", ok: !cpu || !mb || cpu.socket === mb.socket },
+                { name: "Тип Памяти (DDR)", ok: (!mb || !ram || mb.ramType === ram.ramType) && (!cpu || !ram || cpu.ramType === ram.ramType) },
+                { name: "Длина GPU / Корпус", ok: !gpu || !pcCase || gpu.lengthMm <= pcCase.maxGpuLen },
+                { name: "Высота Кулера / Корпус", ok: !cooler || !pcCase || cooler.heightMm <= pcCase.maxCoolerHt },
+                { name: "Мощность Блока питания", ok: psuCapacity === 0 || powerReq <= psuCapacity * 0.85 }
+            ];
+
+            const compList = document.getElementById('compatibilityList');
+            compList.innerHTML = '';
+            let hasErrors = false;
+
+            checks.forEach(c => {
+                if (!c.ok) hasErrors = true;
+                const div = document.createElement('div');
+                div.className = `p-2.5 border flex items-center justify-between ${c.ok ? 'border-zinc-800 text-zinc-400' : 'badge-err'}`;
+                div.innerHTML = `
+                    <span class="font-semibold">${c.name}</span>
+                    <span class="font-bold uppercase">${c.ok ? 'ОК' : 'ОШИБКА'}</span>
+                `;
+                compList.appendChild(div);
+            });
+
+            Object.keys(HARDWARE_DATA).forEach(key => {
+                const badge = document.getElementById(`badge-${key}`);
+                if (!selectedBuild[key]) {
+                    badge.className = "text-[10px] font-bold px-2 py-0.5 border border-zinc-800 text-zinc-600";
+                    badge.innerText = "—";
+                    return;
+                }
+
+                let cardHasError = false;
+                if (key === 'cpu' && mb && cpu.socket !== mb.socket) cardHasError = true;
+                if (key === 'motherboard' && cpu && cpu.socket !== mb.socket) cardHasError = true;
+                if (key === 'ram' && mb && mb.ramType !== ram.ramType) cardHasError = true;
+                if (key === 'gpu' && pcCase && gpu.lengthMm > pcCase.maxGpuLen) cardHasError = true;
+
+                if (cardHasError) {
+                    badge.className = "text-[10px] badge-err px-2 py-0.5";
+                    badge.innerText = "ОШИБКА";
+                } else {
+                    badge.className = "text-[10px] badge-ok px-2 py-0.5";
+                    badge.innerText = "ОК";
+                }
+            });
+
+            const summaryBadge = document.getElementById('compatSummaryBadge');
+            if (hasErrors) {
+                summaryBadge.className = "px-3 py-1 text-xs badge-err uppercase";
+                summaryBadge.innerText = "Несовместимо";
+            } else {
+                summaryBadge.className = "px-3 py-1 text-xs border border-white highlight-white font-bold uppercase";
+                summaryBadge.innerText = "Всё совместимо";
+            }
+        }
+
+        function updatePerformanceScores() {
+            const cpu = selectedBuild.cpu;
+            const gpu = selectedBuild.gpu;
+
+            const gamingScoreEl = document.getElementById('gamingScore');
+            const workScoreEl = document.getElementById('workScore');
+            const tierTitle = document.getElementById('buildTierTitle');
+
+            if (!cpu || !gpu) {
+                gamingScoreEl.innerText = "0 / 100";
+                workScoreEl.innerText = "0 / 100";
+                tierTitle.innerText = "Не сформирована";
+                updateCharts([0, 0, 0], [0, 0, 0, 0]);
+                return;
+            }
+
+            const gamingScore = Math.round((gpu.scoreGaming * 0.75) + (cpu.scoreGaming * 0.25));
+            const workScore = Math.round((cpu.scoreWork * 0.6) + (gpu.scoreWork * 0.4));
+
+            gamingScoreEl.innerText = `${gamingScore} / 100`;
+            workScoreEl.innerText = `${workScore} / 100`;
+
+            if (gamingScore < 40) tierTitle.innerText = "Начальный ПК";
+            else if (gamingScore < 70) tierTitle.innerText = "Средний класс";
+            else tierTitle.innerText = "Мощный игровой ПК";
+
+            let resMultiplier = currentRes === '1440p' ? 0.7 : currentRes === '4K' ? 0.4 : 1.0;
+
+            const cyberpunkFPS = Math.round(gpu.scoreGaming * 1.35 * resMultiplier);
+            const cs2FPS = Math.round((cpu.scoreGaming * 2.1 + gpu.scoreGaming * 0.9) * resMultiplier);
+            const gtaFPS = Math.round((gpu.scoreGaming * 1.5 + cpu.scoreGaming * 0.6) * resMultiplier);
+
+            updateCharts(
+                [cyberpunkFPS, cs2FPS, gtaFPS],
+                [Math.round(workScore * 1.1), Math.round(gpu.scoreWork * 1.2), Math.round(cpu.scoreWork * 1.3), 90]
+            );
+        }
+
+        function initCharts() {
+            const chartConfig = {
+                color: '#ffffff',
+                borderColor: '#333333'
+            };
+
+            gamingChartInstance = new Chart(document.getElementById('gamingChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Cyberpunk 2077', 'CS2', 'GTA V'],
+                    datasets: [{ label: 'FPS', data: [0, 0, 0], backgroundColor: '#ffffff' }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: chartConfig.borderColor }, ticks: { color: '#888888' } },
+                        x: { grid: { display: false }, ticks: { color: '#888888' } }
+                    }
+                }
+            });
+
+            workplaceChartInstance = new Chart(document.getElementById('workplaceChart').getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: ['Монтаж', '3D Графика', 'Код', 'Офис'],
+                    datasets: [{ data: [0, 0, 0, 0], backgroundColor: 'rgba(255,255,255,0.1)', borderColor: '#ffffff', pointBackgroundColor: '#ffffff' }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        r: {
+                            angleLines: { color: chartConfig.borderColor },
+                            grid: { color: chartConfig.borderColor },
+                            pointLabels: { color: '#888888', font: { size: 10 } },
+                            ticks: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts(gamingData, workData) {
+            if (gamingChartInstance) {
+                gamingChartInstance.data.datasets[0].data = gamingData;
+                gamingChartInstance.update();
+            }
+            if (workplaceChartInstance) {
+                workplaceChartInstance.data.datasets[0].data = workData;
+                workplaceChartInstance.update();
+            }
+        }
+
+        function renderGuideSteps() {
+            const container = document.getElementById('guideStepsContainer');
+            container.innerHTML = '';
+
+            ASSEMBLY_STEPS.forEach((step, index) => {
+                const isDone = guideCompleted[index];
+                const stepEl = document.createElement('div');
+                stepEl.className = `p-3 border border-zinc-900 flex items-center justify-between cursor-pointer ${isDone ? 'bg-zinc-900' : ''}`;
+                stepEl.onclick = () => {
+                    guideCompleted[index] = !guideCompleted[index];
+                    renderGuideSteps();
+                };
+
+                stepEl.innerHTML = `
+                    <span class="text-xs ${isDone ? 'line-through text-zinc-600' : 'highlight-white'}">${step}</span>
+                    <span class="text-xs font-mono font-bold">${isDone ? '[X]' : '[ ]'}</span>
+                `;
+
+                container.appendChild(stepEl);
+            });
+
+            const completedCount = guideCompleted.filter(Boolean).length;
+            const percent = Math.round((completedCount / ASSEMBLY_STEPS.length) * 100);
+            document.getElementById('guideProgressText').innerText = `${percent}%`;
+        }
+
+        function openInfoModal(categoryKey) {
+            const data = HARDWARE_DATA[categoryKey];
+            if (!data) return;
+
+            document.getElementById('modalTitle').innerText = data.title;
+            document.getElementById('modalDescription').innerText = data.info;
+            document.getElementById('modalTip').innerText = data.tip;
+
+            const modal = document.getElementById('infoModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function setupEventListeners() {
+            document.getElementById('closeModalBtn').addEventListener('click', () => {
+                document.getElementById('infoModal').classList.add('hidden');
+            });
+
+            document.getElementById('resetBuildBtn').addEventListener('click', () => {
+                Object.keys(HARDWARE_DATA).forEach(key => {
+                    const select = document.getElementById(`select-${key}`);
+                    if (select) select.value = '';
+                    handleSelectChange(key, '');
+                });
+            });
+
+            const resBtns = document.querySelectorAll('.res-btn');
+            resBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    resBtns.forEach(b => {
+                        b.classList.remove('highlight-white', 'border-b', 'border-white', 'font-bold');
+                        b.classList.add('text-zinc-600');
+                    });
+                    e.target.classList.add('highlight-white', 'border-b', 'border-white', 'font-bold');
+                    e.target.classList.remove('text-zinc-600');
+
+                    currentRes = e.target.getAttribute('data-res');
+                    updatePerformanceScores();
+                });
+            });
+        }
+    </script>
+</body>
+</html>
